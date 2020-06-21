@@ -8,6 +8,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:admob_flutter/admob_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+// Widget imports
+import '../widgets/PlayerGridList.dart';
+
 const bool kAutoConsume = true;
 const String _kConsumableId = '';
 const List<String> _kProductIds = <String>[
@@ -339,34 +342,7 @@ class _HomeState extends State<Home> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 50.0),
                 child: Container(
-                  child: GridView.count(
-                  crossAxisCount: 2,
-                  padding: EdgeInsets.all(10.0),
-                  crossAxisSpacing: 10.0,
-                  mainAxisSpacing: 10.0,
-                  scrollDirection: Axis.vertical,
-                  children: _players.map((player) {
-                    return Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(10.0)), 
-                        color: Colors.white.withOpacity(0.7)), 
-                      alignment: Alignment.center,
-                      child: Column(
-                        children: <Widget>[
-                          Flexible(
-                            flex: 3,
-                            child: Container(alignment: Alignment.center, child: Text("${player['name']}", style: TextStyle(fontFamily: "Architects Daughter", fontSize: 24, fontWeight: FontWeight.bold)))
-                          ),
-                          Flexible(
-                            flex: 4,
-                            child: Container(
-                              child: scoreOrDelete(editing, player)
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList()),
+                  child: PlayerGridList(),
                 ),
               ),
               // Show the ad if no purchase has been made

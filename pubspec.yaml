@@ -39,3 +39,4 @@ flutter:
               - asset: assets/fonts/ArchitectsDaughter-Regular.ttf
     assets:
         - assets/images/
+        - secrets.json
