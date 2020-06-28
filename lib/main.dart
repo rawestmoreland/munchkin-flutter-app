@@ -2,11 +2,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:admob_flutter/admob_flutter.dart';
+import 'package:munchkin/models/PlayerList.dart';
+import 'package:provider/provider.dart';
 
 // import pages
 import 'Pages/Home.dart';
+import 'models/PlayerList.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   Admob.initialize(getAppId());
   InAppPurchaseConnection.enablePendingPurchases();
@@ -37,7 +40,10 @@ void main() {
         theme: ThemeData(
           primarySwatch: Colors.blue
         ),
-        home: Home()
+        home: ChangeNotifierProvider<PlayerList>(
+          create: (_) => PlayerList(),
+          child: Home(),
+        )
       );
     }
   }

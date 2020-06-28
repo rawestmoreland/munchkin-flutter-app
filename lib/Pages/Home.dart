@@ -1,15 +1,15 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:async';
-import 'package:in_app_purchase/in_app_purchase.dart';
-import 'package:flutter_inapp_purchase/flutter_inapp_purchase.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:admob_flutter/admob_flutter.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_inapp_purchase/flutter_inapp_purchase.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:munchkin/widgets/PlayerGridList.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-// Widget imports
-import '../widgets/PlayerGridList.dart';
 
 const bool kAutoConsume = true;
 const String _kConsumableId = '';
@@ -212,8 +212,6 @@ class _HomeState extends State<Home> {
     _initSharedPrefs();
   }
 
-
-  
     @override
     void dispose() {
       _subscription.cancel();
@@ -574,13 +572,13 @@ class _HomeState extends State<Home> {
 
     _connection.buyNonConsumable(purchaseParam: purchaseParam);
   }
-}
 
-String getBannerAdUnitId() {
+  String getBannerAdUnitId() {
     if (Platform.isIOS) {
-      return 'ca-app-pub-7987021525697218/6921290209';
+      return "ca-app-pub-7987021525697218/5612379282";
     } else if (Platform.isAndroid) {
-      return 'ca-app-pub-7987021525697218/5612379282';
+      return "ca-app-pub-7987021525697218/6921290209";
     }
     return null;
   }
+}

@@ -1,4 +1,4 @@
-package com.example.munchkin_app
+package com.example.munchkin
 
 import io.flutter.embedding.android.FlutterActivity
 

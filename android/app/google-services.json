@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "1087590120421",
+    "firebase_url": "https://munchkin-flutter.firebaseio.com",
+    "project_id": "munchkin-flutter",
+    "storage_bucket": "munchkin-flutter.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1087590120421:android:d980247ad4690cb86c0d0c",
+        "android_client_info": {
+          "package_name": "com.wiferm.munchkin"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1087590120421-und2anebfhfb82b2rfdd5s5ilsl2hqfa.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4sEbag2C8bkoi0RIWFueWbpDTPXtg1M0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1087590120421-und2anebfhfb82b2rfdd5s5ilsl2hqfa.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1087590120421-3e1p9atl9b62md95bfqk1a7pfvptrj0t.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.munchkinApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

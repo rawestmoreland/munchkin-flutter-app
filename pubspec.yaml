@@ -27,9 +27,9 @@ dependencies:
     in_app_purchase: ^0.3.4
     flutter_inapp_purchase: ^2.2.0
     url_launcher: ^5.4.10
+    firebase_core: ^0.4.5
 
 dev_dependencies:
-    flutter_config: ^1.0.5
     flutter_test:
         sdk: flutter
 flutter:
@@ -40,4 +40,3 @@ flutter:
               - asset: assets/fonts/ArchitectsDaughter-Regular.ttf
     assets:
         - assets/images/
-        - secrets.json

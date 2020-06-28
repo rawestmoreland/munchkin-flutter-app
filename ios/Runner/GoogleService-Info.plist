@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>1087590120421-3e1p9atl9b62md95bfqk1a7pfvptrj0t.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.1087590120421-3e1p9atl9b62md95bfqk1a7pfvptrj0t</string>
+	<key>API_KEY</key>
+	<string>AIzaSyC2rnmzoeqn7D86bZhRESN1s1RrT6D4nqY</string>
+	<key>GCM_SENDER_ID</key>
+	<string>1087590120421</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.munchkinApp</string>
+	<key>PROJECT_ID</key>
+	<string>munchkin-flutter</string>
+	<key>STORAGE_BUCKET</key>
+	<string>munchkin-flutter.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:1087590120421:ios:65f30be6000d9bde6c0d0c</string>
+	<key>DATABASE_URL</key>
+	<string>https://munchkin-flutter.firebaseio.com</string>
+</dict>
+</plist>
