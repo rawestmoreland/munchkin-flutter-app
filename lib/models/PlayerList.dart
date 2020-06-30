@@ -13,6 +13,8 @@ class PlayerList extends ChangeNotifier {
     setup();
   }
 
+  // testing push
+
   // Get the player list from disk on startup
   setup() async {
     final prefs = await SharedPreferences.getInstance();
