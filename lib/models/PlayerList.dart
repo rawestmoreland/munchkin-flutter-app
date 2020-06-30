@@ -1,11 +1,12 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'PlayerModel.dart';
 
 class PlayerList extends ChangeNotifier {
-  List<PlayerModel> playerList = [];
+  List playerList = [];
   // Are we editing the list of players?
   bool editing = false;
 
@@ -16,21 +17,31 @@ class PlayerList extends ChangeNotifier {
   // Get the player list from disk on startup
   setup() async {
     final prefs = await SharedPreferences.getInstance();
-    playerList = jsonDecode(prefs.getString('players')) ?? [];
+    String playerString;
+    if (prefs.getString('players') != null) {
+      playerString = prefs.getString('players');
+      playerList = await json.decode(playerString);
+    } else {
+      playerList = [];
+    }
     notifyListeners();
   }
 
   // Save the playerlist to disk
   savePlayerList(List playerList) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('players', playerList.toString());
+    List playerSave = [];
+    playerList.forEach((player) {
+      player = json.encode(player);
+      playerSave.add(player);
+    });
+    await prefs.setString('players', playerSave.toString());
   }
 
   // Add a player to the list and save the lsit to disk
-  addPlayer(name) {
-    var player = new PlayerModel(name, 1);
+  void addPlayer(name) {
+    var player = new PlayerModel(name, 1).toMap();
     playerList.add(player);
-    print(playerList);
     savePlayerList(playerList);
     notifyListeners();
   }

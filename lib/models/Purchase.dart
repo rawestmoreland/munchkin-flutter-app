@@ -20,7 +20,7 @@ class Purchase {
       // TODO: handle the error here
     });
     initStoreInfo();
-  };
+  }
 
   static const bool kAutoConsume = true;
   static const String _kConsumabeId = '';

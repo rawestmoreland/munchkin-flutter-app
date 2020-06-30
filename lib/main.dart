@@ -7,6 +7,8 @@ import 'package:provider/provider.dart';
 
 // import pages
 import 'Pages/Home.dart';
+import 'package:munchkin/Pages/HomeProvider.dart';
+import 'models/Dialogs.dart';
 import 'models/PlayerList.dart';
 
 void main() async {
@@ -34,16 +36,18 @@ void main() async {
 
     @override
     Widget build(BuildContext context) {
-      return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Munchkin Counter',
-        theme: ThemeData(
-          primarySwatch: Colors.blue
+      return MultiProvider(
+        providers: [
+          ChangeNotifierProvider<PlayerList>(create: (_) => PlayerList()),
+        ],
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Munchkin Counter',
+          theme: ThemeData(
+            primarySwatch: Colors.blue
+          ),
+          home: HomeProvider()
         ),
-        home: ChangeNotifierProvider<PlayerList>(
-          create: (_) => PlayerList(),
-          child: Home(),
-        )
       );
     }
   }
