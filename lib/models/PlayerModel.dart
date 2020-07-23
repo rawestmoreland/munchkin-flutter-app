@@ -2,9 +2,9 @@ class PlayerModel {
   String name;
   int score;
 
-  String get getName => name;
-  int get getScore => score;
+  Map<String, dynamic> toMap() {
+    return {'name': name, 'score': score};
+  }
 
   PlayerModel(this.name, this.score);
-
 }

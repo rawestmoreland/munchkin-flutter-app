@@ -9,74 +9,84 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 /// List of product ids
 /// Functions for accessing the products
 /// Variables associated with getting and verifying products
-class Purchase {
-  Purchase() {
-    Stream purchaseUpdated = InAppPurchaseConnection.instance.purchaseUpdatedStream;
+class Purchase extends ChangeNotifier {
+  Future<Map<String, dynamic>> setupPurchases() async {
+    Stream purchaseUpdated =
+        InAppPurchaseConnection.instance.purchaseUpdatedStream;
     _subscription = purchaseUpdated.listen((purchaseDetailsList) {
       _listenToPurchaseUpdated(purchaseDetailsList);
     }, onDone: () {
       _subscription.cancel();
     }, onError: (error) {
-      // TODO: handle the error here
+      print(error);
     });
-    initStoreInfo();
-  };
+    await initStoreInfo();
+
+    Map<String, dynamic> purchaseInfo = {
+      'purchased': purchased,
+      'products': products
+    };
+
+    return purchaseInfo;
+  }
 
   static const bool kAutoConsume = true;
-  static const String _kConsumabeId = '';
-  static const List<String> _kProducts = <String>[
-    'no_ads_munchkin',
-  ];
+  static const String _kConsumableId = '';
+  static const List<String> _kProductIds = <String>['no_ads_munchkin_flutter'];
+
   final InAppPurchaseConnection _connection = InAppPurchaseConnection.instance;
-  StreamSubscription<List<PurchaseDetails>> _subscription;  
+  StreamSubscription<List<PurchaseDetails>> _subscription;
   List<String> _notFoundIds = [];
-  List<ProductDetails> _products = [];
+  List<ProductDetails> products = [];
   List<PurchaseDetails> _purchases = [];
   List<String> _consumables = [];
   bool _isAvailable = false;
   bool _purchasePending = false;
-  bool _loading = false;
+  bool _loading = true;
   String _queryProductError;
   bool purchased = false;
+  Map<String, dynamic> purchaseInfo;
 
   Future<void> initStoreInfo() async {
-    // If we have a stuck transaction - clear it from iOS
     FlutterInappPurchase.instance.clearTransactionIOS();
     final bool isAvailable = await _connection.isAvailable();
     if (!isAvailable) {
-      print("The store is not available");
+      print('The store is not available');
       _isAvailable = isAvailable;
-      _products = [];
+      products = [];
       _purchases = [];
       _notFoundIds = [];
-      _consumables = [];
-      _purchasePending = [];
-      _loading = false;
-      return;
-    } else {
-      print("The store is open for business");
-    }
-
-    ProductDetailsResponse productDetailResponse =
-      await _connection.queryProductDetails(_kProductIds.toSet());
-    if (productDetailsResponse.error != null) {
-      _queryProductError = productDetailResponse.error.message;
-      _isAvailable = isAvailable;
-      _products = productDetailResponse.productDetails;
-      _purchases = [];
-      _notFoundIds = productDetailResponse.notFoundIDs;
       _consumables = [];
       _purchasePending = false;
       _loading = false;
       return;
+    } else {
+      print('The store is open for business');
     }
 
-    if (productDetailResponse.productDetails.isEmpty) {
+    ProductDetailsResponse productDetailsResponse =
+        await _connection.queryProductDetails(_kProductIds.toSet());
+    if (productDetailsResponse.error != null) {
+      print('Product details error not null');
+      _queryProductError = productDetailsResponse.error.message;
+      print(_queryProductError);
+        _isAvailable = isAvailable;
+        products = productDetailsResponse.productDetails;
+        _purchases = [];
+        _notFoundIds = productDetailsResponse.notFoundIDs;
+        _consumables = [];
+        _purchasePending = false;
+        _loading = false;
+      return;
+    }
+
+    if (productDetailsResponse.productDetails.isEmpty) {
+      print('Product details empty');
       _queryProductError = null;
       _isAvailable = isAvailable;
-      _products = productDetailResponse.productDetails;
+      products = productDetailsResponse.productDetails;
       _purchases = [];
-      _notFoundIds = productDetailResponse.notFoundIDs;
+      _notFoundIds = productDetailsResponse.notFoundIDs;
       _consumables = [];
       _purchasePending = false;
       _loading = false;
@@ -84,12 +94,14 @@ class Purchase {
     }
 
     final QueryPurchaseDetailsResponse response =
-      await _connection.queryPastPurchases();
+        await _connection.queryPastPurchases();
     if (response.error != null) {
-      // TODO: handle query past purchase error
+      print('There was a past purchase error');
+      print(response.error.message);
     }
     final List<PurchaseDetails> verifiedPurchases = [];
     for (PurchaseDetails purchase in response.pastPurchases) {
+      print(purchase.productID);
       _purchases.add(purchase);
       if (await _verifyPurchase(purchase)) {
         if (Platform.isIOS) {
@@ -99,57 +111,18 @@ class Purchase {
       }
     }
     for (var i in verifiedPurchases) {
-      if (i.productID == 'no_ads_munchkin') {
+      if (_kProductIds.contains(i.productID)) {
         purchased = true;
-        print("You have purchased an upgraded thing");
-        print("Purchased: $purchased");
+        print('You have paid to remove ads');
+        print('Purchased: $purchased');
       }
     }
     _isAvailable = isAvailable;
-    _products = productDetailResponse.productDetails;
+    products = productDetailsResponse.productDetails;
     _purchases = verifiedPurchases;
-    _notFoundIds = productDetailResponse.notFoundIDs;
+    _notFoundIds = productDetailsResponse.notFoundIDs;
     _purchasePending = false;
     _loading = false;
-  }
-
-  void showPendingUI() {
-    _purchasePending = true;
-  }
-
-  void deliverProduct(PurchaseDetails purchaseDetails) async {
-    _purchases.add(purchaseDetails);
-    _purchasePending = false;
-    purchased = true;
-    print("Purchased: $purchased");
-    print("product delivered");
-  }
-
-  void handleError(IAPError error) {
-    _purchasePending = false;
-  }
-
-  /// Returns purchase of specific product ID
-  PurchaseDetails _hasPurchased(String productID) {
-    return _purchases.firstWhere((purchase) => purchase.productID == productID,
-        orElse: () => null);
-  }
-
-  Future<bool> _verifyPurchase(PurchaseDetails purchaseDetails) {
-    // IMPORTANT!! Always verify a purchase before delivering the product.
-    // For the purpose of an example, we directly return true.
-    PurchaseDetails purchase = _hasPurchased(purchaseDetails.productID);
-    if (purchase != null && purchase.status == PurchaseStatus.purchased) {
-      purchased = true;
-      return Future<bool>.value(true);
-    } else {
-      _handleInvalidPurchase(purchaseDetails);
-      return Future<bool>.value(false);
-    }
-  }
-  
-  void _handleInvalidPurchase(PurchaseDetails purchaseDetails) {
-    print("This is an invalid purchase");
   }
 
   void _listenToPurchaseUpdated(List<PurchaseDetails> purchaseDetailsList) {
@@ -160,7 +133,8 @@ class Purchase {
         if (purchaseDetails.status == PurchaseStatus.error) {
           handleError(purchaseDetails.error);
         } else if (purchaseDetails.status == PurchaseStatus.purchased) {
-          print("You have purchased the thing");
+          purchased = true;
+          print('You have made a purchase');
           deliverProduct(purchaseDetails);
         } else {
           _handleInvalidPurchase(purchaseDetails);
@@ -176,9 +150,44 @@ class Purchase {
     });
   }
 
-  void _buyProduct(ProductDetails prod) {
+  void showPendingUI() {
+    _purchasePending = true;
+  }
+
+  void handleError(IAPError error) {
+    _purchasePending = false;
+  }
+
+  void deliverProduct(PurchaseDetails purchaseDetails) async {
+    _purchases.add(purchaseDetails);
+    _purchasePending = false;
+    print('Purchased: $purchased');
+    print('product delivered');
+  }
+
+  Future<bool> _verifyPurchase(PurchaseDetails purchaseDetails) {
+    PurchaseDetails purchase = _hasPurchased(purchaseDetails.productID);
+    if (purchase != null && purchase.status == PurchaseStatus.purchased) {
+      purchased = true;
+      return Future<bool>.value(false);
+    } else {
+      _handleInvalidPurchase(purchaseDetails);
+      return Future<bool>.value(false);
+    }
+  }
+
+  void _handleInvalidPurchase(PurchaseDetails purchaseDetails) {
+    print('This is an invalid purchase');
+  }
+
+  PurchaseDetails _hasPurchased(String productID) {
+    return _purchases.firstWhere((purchase) => purchase.productID == productID,
+        orElse: () => null);
+  }
+
+  void buyProduct(ProductDetails prod) async {
     final PurchaseParam purchaseParam = PurchaseParam(productDetails: prod);
 
-    _connection.buyNonConsumable(purchaseParam: purchaseParam);
+    await _connection.buyConsumable(purchaseParam: purchaseParam);
   }
 }
