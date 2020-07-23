@@ -8,7 +8,6 @@ import 'package:munchkin/models/PlayerList.dart';
 import 'package:provider/provider.dart';
 
 import 'models/PlayerList.dart';
-import 'models/Purchase.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
