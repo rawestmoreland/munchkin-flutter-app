@@ -31,8 +31,8 @@ class Purchase extends ChangeNotifier {
   }
 
   static const bool kAutoConsume = true;
-  static const String _kConsumableId = 'munchkin_test';
-  static const List<String> _kProductIds = <String>['munchkin_test'];
+  static const String _kConsumableId = '';
+  static const List<String> _kProductIds = <String>['no_ads_munchkin_flutter'];
 
   final InAppPurchaseConnection _connection = InAppPurchaseConnection.instance;
   StreamSubscription<List<PurchaseDetails>> _subscription;
