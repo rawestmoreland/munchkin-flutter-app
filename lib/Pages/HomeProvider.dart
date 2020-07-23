@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:admob_flutter/admob_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:munchkin/models/PlayerList.dart';
 import 'package:munchkin/widgets/PlayerGridList.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:connectivity/connectivity.dart';
 import 'dart:io';
 
 import 'package:flutter_inapp_purchase/flutter_inapp_purchase.dart';
@@ -35,10 +37,17 @@ class _HomeProviderState extends State<HomeProvider> {
   bool _loading = true;
   String _queryProductError;
   bool _purchased = false;
+  String _connectionStatus = 'Unknown';
+
+  final Connectivity _connectivity = Connectivity();
+  StreamSubscription<ConnectivityResult> _connectivitySubscription;
 
   @override
   void initState() {
     super.initState();
+    initConnectivity();
+    _connectivitySubscription =
+        _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
     Stream purchaseUpdated =
         InAppPurchaseConnection.instance.purchaseUpdatedStream;
     _subscription = purchaseUpdated.listen((purchaseDetailsList) {
@@ -54,251 +63,304 @@ class _HomeProviderState extends State<HomeProvider> {
   @override
   void dispose() {
     _subscription.cancel();
+    _connectivitySubscription.cancel();
     super.dispose();
+  }
+
+  Future<void> initConnectivity() async {
+    ConnectivityResult result;
+
+    try {
+      result = await _connectivity.checkConnectivity();
+    } on PlatformException catch (e) {
+      print(e.toString());
+    }
+
+    if (!mounted) {
+      return Future.value(null);
+    }
+
+    return _updateConnectionStatus(result);
+  }
+
+  Future<void> _updateConnectionStatus(ConnectivityResult result) async {
+    setState(() {
+      _connectionStatus = result.toString();
+    });
+    print("Connection status: $_connectionStatus");
   }
 
   @override
   Widget build(BuildContext context) {
     final playerList = Provider.of<PlayerList>(context, listen: false);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Munchkin Levels'.toUpperCase(),
-            style: TextStyle(
-                fontFamily: 'Architects Daughter',
-                fontWeight: FontWeight.bold)),
-        centerTitle: true,
-        leading: Consumer<PlayerList>(
-          builder: (context, playerList, child) => IconButton(
-              icon: !playerList.editing ? Icon(Icons.edit) : Icon(Icons.cancel),
-              onPressed: () =>
-                  {playerList.handleEditButton(playerList.editing)}),
-        ),
-        backgroundColor: Colors.brown[700],
-        actions: <Widget>[
-          IconButton(
-              icon: Icon(Icons.add),
-              onPressed: () => {
-                    showDialog(
-                        context: context,
-                        barrierDismissible: true,
-                        builder: (BuildContext context) {
-                          TextEditingController playerNameController =
-                              TextEditingController();
-                          return AlertDialog(
-                            title: Text("add a player"),
-                            content: TextField(
-                              controller: playerNameController,
-                              decoration:
-                                  InputDecoration(hintText: "player name"),
-                              style:
-                                  TextStyle(fontFamily: "Architects Daughter"),
-                              textCapitalization: TextCapitalization.characters,
-                            ),
-                            actions: <Widget>[
-                              FlatButton(
-                                  onPressed: () => {
-                                        playerList.addPlayer(
-                                            playerNameController.text),
-                                        Navigator.pop(context),
-                                        playerNameController.text = ""
-                                      },
-                                  child: Text("add")),
-                              FlatButton(
-                                  onPressed: () => {
-                                        Navigator.pop(context),
-                                        playerNameController.text = ""
-                                      },
-                                  child: Text("cancel"))
-                            ],
-                          );
-                        })
-                  })
-        ],
-      ),
-      bottomNavigationBar: BottomAppBar(
-        color: Colors.brown[700],
-        child: Container(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              FlatButton(
-                child: Text("New Game", style: TextStyle(color: Colors.white)),
-                onPressed: () => {
-                  showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          content: Text(
-                              "Are you sure you want to reset all scores?",
-                              style:
-                                  TextStyle(fontFamily: 'Architects Daughter')),
-                          actions: <Widget>[
-                            FlatButton(
-                              child: Text("No"),
-                              onPressed: () => {Navigator.pop(context)},
-                            ),
-                            FlatButton(
-                              child: Text("Yes"),
-                              onPressed: () => {
-                                playerList.newGame(),
-                                Navigator.pop(context)
-                              },
-                            )
-                          ],
-                        );
-                      })
-                },
+    return !_loading
+        ? Scaffold(
+            appBar: AppBar(
+              title: Text('Munchkin Levels'.toUpperCase(),
+                  style: TextStyle(
+                      fontFamily: 'Architects Daughter',
+                      fontWeight: FontWeight.bold)),
+              centerTitle: true,
+              leading: Consumer<PlayerList>(
+                builder: (context, playerList, child) => IconButton(
+                    icon: !playerList.editing
+                        ? Icon(Icons.edit)
+                        : Icon(Icons.cancel),
+                    onPressed: () =>
+                        {playerList.handleEditButton(playerList.editing)}),
               ),
-              (!_purchased)
-                  ? FlatButton(
-                      child: Text("Remove Ads",
+              backgroundColor: Colors.brown[700],
+              actions: <Widget>[
+                IconButton(
+                    icon: Icon(Icons.add),
+                    onPressed: () => {
+                          showDialog(
+                              context: context,
+                              barrierDismissible: true,
+                              builder: (BuildContext context) {
+                                TextEditingController playerNameController =
+                                    TextEditingController();
+                                return AlertDialog(
+                                  title: Text("add a player"),
+                                  content: TextField(
+                                    controller: playerNameController,
+                                    decoration: InputDecoration(
+                                        hintText: "player name"),
+                                    style: TextStyle(
+                                        fontFamily: "Architects Daughter"),
+                                    textCapitalization:
+                                        TextCapitalization.characters,
+                                  ),
+                                  actions: <Widget>[
+                                    FlatButton(
+                                        onPressed: () => {
+                                              playerList.addPlayer(
+                                                  playerNameController.text),
+                                              Navigator.pop(context),
+                                              playerNameController.text = ""
+                                            },
+                                        child: Text("add")),
+                                    FlatButton(
+                                        onPressed: () => {
+                                              Navigator.pop(context),
+                                              playerNameController.text = ""
+                                            },
+                                        child: Text("cancel"))
+                                  ],
+                                );
+                              })
+                        })
+              ],
+            ),
+            bottomNavigationBar: BottomAppBar(
+              color: Colors.brown[700],
+              child: Container(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    FlatButton(
+                      child: Text("New Game",
                           style: TextStyle(color: Colors.white)),
                       onPressed: () => {
-                            showDialog(
-                                context: context,
-                                barrierDismissible: true,
-                                builder: (BuildContext context) {
-                                  return Center(
-                                    child: SingleChildScrollView(
-                                        child: AlertDialog(
-                                      content: Container(
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: <Widget>[
-                                            Text(
-                                              "Remove ads from Munchkin Levels for \$0.99?",
-                                              textAlign: TextAlign.center,
-                                            ),
-                                            SizedBox(
-                                              height: 30.0,
-                                            ),
-                                            FlatButton(
-                                              color: Colors.blue,
-                                              child: Text(
-                                                "Yes, remove ads for \$0.99",
-                                                style: TextStyle(
-                                                    color: Colors.white),
-                                              ),
-                                              onPressed: () => {
-                                                Navigator.pop(context),
-                                                _buyProduct(_products[0]),
-                                              },
-                                            ),
-                                            SizedBox(height: 30.0),
-                                            Text(
-                                                (Platform.isIOS)
-                                                    ? "Payment will be charged to your Apple ID account at the confirmation of purchase."
-                                                    : "Payment will be charged to your Google Play account at the confirmation of purchase.",
-                                                style:
-                                                    TextStyle(fontSize: 10.0),
-                                                textAlign: TextAlign.center),
-                                            SizedBox(height: 10.0),
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: <Widget>[
-                                                InkWell(
-                                                    child: Text(
-                                                        "privacy policy",
-                                                        style: TextStyle(
-                                                            fontSize: 10.0,
-                                                            color:
-                                                                Colors.blue)),
-                                                    onTap: () async {
-                                                      const privacyUrl =
-                                                          "https://app.termly.io/document/privacy-policy/28251f47-3c81-4ae6-a9bc-61d11cb036d2";
-                                                      if (await canLaunch(
-                                                          privacyUrl)) {
-                                                        await launch(
-                                                            privacyUrl);
-                                                      } else {
-                                                        throw 'Could not launch privacy URL';
-                                                      }
-                                                    }),
-                                                Text(
-                                                  " and ",
-                                                  style:
-                                                      TextStyle(fontSize: 10.0),
-                                                ),
-                                                InkWell(
-                                                    child: Text(
-                                                        "terms and conditions",
-                                                        style: TextStyle(
-                                                            fontSize: 10.0,
-                                                            color:
-                                                                Colors.blue)),
-                                                    onTap: () async {
-                                                      const termsUrl =
-                                                          "https://www.websitepolicies.com/policies/view/OGLePPlG";
-                                                      if (await canLaunch(
-                                                          termsUrl)) {
-                                                        await launch(termsUrl);
-                                                      } else {
-                                                        throw 'Could not launch terms URL';
-                                                      }
-                                                    }),
-                                              ],
-                                            )
-                                          ],
-                                        ),
-                                      ),
-                                      actions: <Widget>[
-                                        FlatButton(
-                                          child: Text("NO THANKS",
-                                              style:
-                                                  TextStyle(color: Colors.red)),
-                                          onPressed: () =>
-                                              {Navigator.pop(context)},
-                                        )
-                                      ],
-                                    )),
-                                  );
-                                }),
-                          })
-                  : Container(
-                      height: 0,
-                      width: 0,
+                        showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                content: Text(
+                                    "Are you sure you want to reset all scores?",
+                                    style: TextStyle(
+                                        fontFamily: 'Architects Daughter')),
+                                actions: <Widget>[
+                                  FlatButton(
+                                    child: Text("No"),
+                                    onPressed: () => {Navigator.pop(context)},
+                                  ),
+                                  FlatButton(
+                                    child: Text("Yes"),
+                                    onPressed: () => {
+                                      playerList.newGame(),
+                                      Navigator.pop(context)
+                                    },
+                                  )
+                                ],
+                              );
+                            })
+                      },
                     ),
-            ],
-          ),
-        ),
-      ),
-      body: Container(
-        height: MediaQuery.of(context).size.height * 2,
-        decoration: BoxDecoration(
-          image: DecorationImage(
-              image: AssetImage('assets/images/Paper-Texture-.png'),
-              fit: BoxFit.cover),
-        ),
-        child: Stack(
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.only(bottom: 50.0),
-              child: Container(
-                child: Consumer<PlayerList>(
-                    builder: (context, playerList, child) =>
-                        PlayerGridList(players: playerList.playerList)),
+                    (!_purchased)
+                        ? FlatButton(
+                            child: Text("Remove Ads",
+                                style: TextStyle(color: Colors.white)),
+                            onPressed: () => {
+                                  showDialog(
+                                      context: context,
+                                      barrierDismissible: true,
+                                      builder: (BuildContext context) {
+                                        return Center(
+                                          child: SingleChildScrollView(
+                                              child: AlertDialog(
+                                            content: Container(
+                                              child: Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: <Widget>[
+                                                  Text(
+                                                    "Remove ads from Munchkin Levels for \$0.99?",
+                                                    textAlign: TextAlign.center,
+                                                  ),
+                                                  SizedBox(
+                                                    height: 30.0,
+                                                  ),
+                                                  FlatButton(
+                                                    color: Colors.blue,
+                                                    child: Text(
+                                                      "Yes, remove ads for \$0.99",
+                                                      style: TextStyle(
+                                                          color: Colors.white),
+                                                    ),
+                                                    onPressed: () => {
+                                                      Navigator.pop(context),
+                                                      _buyProduct(_products[0]),
+                                                    },
+                                                  ),
+                                                  SizedBox(height: 30.0),
+                                                  Text(
+                                                      (Platform.isIOS)
+                                                          ? "Payment will be charged to your Apple ID account at the confirmation of purchase."
+                                                          : "Payment will be charged to your Google Play account at the confirmation of purchase.",
+                                                      style: TextStyle(
+                                                          fontSize: 10.0),
+                                                      textAlign:
+                                                          TextAlign.center),
+                                                  SizedBox(height: 10.0),
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: <Widget>[
+                                                      InkWell(
+                                                          child: Text(
+                                                              "privacy policy",
+                                                              style: TextStyle(
+                                                                  fontSize:
+                                                                      10.0,
+                                                                  color: Colors
+                                                                      .blue)),
+                                                          onTap: () async {
+                                                            const privacyUrl =
+                                                                "https://app.termly.io/document/privacy-policy/28251f47-3c81-4ae6-a9bc-61d11cb036d2";
+                                                            if (await canLaunch(
+                                                                privacyUrl)) {
+                                                              await launch(
+                                                                  privacyUrl);
+                                                            } else {
+                                                              throw 'Could not launch privacy URL';
+                                                            }
+                                                          }),
+                                                      Text(
+                                                        " and ",
+                                                        style: TextStyle(
+                                                            fontSize: 10.0),
+                                                      ),
+                                                      InkWell(
+                                                          child: Text(
+                                                              "terms and conditions",
+                                                              style: TextStyle(
+                                                                  fontSize:
+                                                                      10.0,
+                                                                  color: Colors
+                                                                      .blue)),
+                                                          onTap: () async {
+                                                            const termsUrl =
+                                                                "https://www.websitepolicies.com/policies/view/OGLePPlG";
+                                                            if (await canLaunch(
+                                                                termsUrl)) {
+                                                              await launch(
+                                                                  termsUrl);
+                                                            } else {
+                                                              throw 'Could not launch terms URL';
+                                                            }
+                                                          }),
+                                                    ],
+                                                  )
+                                                ],
+                                              ),
+                                            ),
+                                            actions: <Widget>[
+                                              FlatButton(
+                                                child: Text("NO THANKS",
+                                                    style: TextStyle(
+                                                        color: Colors.red)),
+                                                onPressed: () =>
+                                                    {Navigator.pop(context)},
+                                              )
+                                            ],
+                                          )),
+                                        );
+                                      }),
+                                })
+                        : Container(
+                            height: 0,
+                            width: 0,
+                          ),
+                  ],
+                ),
               ),
             ),
-            !_purchased
-                ? Positioned(
-                    bottom: 0,
+            body: Container(
+              height: MediaQuery.of(context).size.height * 2,
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                    image: AssetImage('assets/images/Paper-Texture-.png'),
+                    fit: BoxFit.cover),
+              ),
+              child: Stack(
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 50.0),
                     child: Container(
-                      color: Colors.transparent,
-                      width: MediaQuery.of(context).size.width,
-                      child: AdmobBanner(
-                        adSize: AdmobBannerSize.BANNER,
-                        adUnitId: Controller.getBannerAdUnitId(),
-                      ),
+                      child: Consumer<PlayerList>(
+                          builder: (context, playerList, child) =>
+                              PlayerGridList(players: playerList.playerList)),
                     ),
-                  )
-                : Container(),
-          ],
-        ),
-      ),
-    );
+                  ),
+                  !_purchased
+                      ? Positioned(
+                          bottom: 0,
+                          child: Container(
+                            color: Colors.transparent,
+                            width: MediaQuery.of(context).size.width,
+                            child: AdmobBanner(
+                              adSize: AdmobBannerSize.BANNER,
+                              adUnitId: Controller.getBannerAdUnitId(),
+                            ),
+                          ),
+                        )
+                      : Container(),
+                ],
+              ),
+            ),
+          )
+        : Container(
+            height: MediaQuery.of(context).size.height,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                  image: AssetImage('assets/images/Paper-Texture-.png'),
+                  fit: BoxFit.cover),
+            ),
+            child: Center(child: CircularProgressIndicator()));
+  }
+
+  Future<bool> checkConnection() async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+
+    if (connectivityResult == ConnectionResult.none) {
+      _connectedToNetwork = false;
+    } else
+      _connectedToNetwork = true;
+
+    return _connectedToNetwork;
   }
 
   Future<void> initStoreInfo() async {
