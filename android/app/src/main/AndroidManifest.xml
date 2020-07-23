@@ -10,7 +10,7 @@
     <application
         android:name="io.flutter.app.FlutterApplication"
         android:label="Munchkin Levels"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/launcher_icon">
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-7987021525697218~1864705963" />

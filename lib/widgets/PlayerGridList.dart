@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:munchkin/models/PlayerList.dart';
+import 'package:provider/provider.dart';
+import 'ScoreOrDelete.dart';
 
 ///
 /// A grid view that show the list of players with their name,
@@ -9,7 +12,7 @@ class PlayerGridList extends StatelessWidget {
   PlayerGridList({this.players});
   @override
   Widget build(BuildContext context) {
-    print(players);
+    bool editing = Provider.of<PlayerList>(context, listen: false).editing;
     return GridView.count(
         crossAxisCount: 2,
         padding: EdgeInsets.all(10.0),
@@ -35,8 +38,8 @@ class PlayerGridList extends StatelessWidget {
                                 fontWeight: FontWeight.bold)))),
                 Flexible(
                   flex: 4,
-                  child: Container(child: null // scoreOrDelete(editing, player)
-                      ),
+                  child: Container(
+                      child: Consumer<PlayerList>(builder: (context, playerList, child) => ScoreOrDelete(player: player, editing: editing))),
                 ),
               ],
             ),

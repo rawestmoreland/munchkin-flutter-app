@@ -39,14 +39,49 @@ class PlayerList extends ChangeNotifier {
   }
 
   // Add a player to the list and save the lsit to disk
-  void addPlayer(name) {
+  addPlayer(name) {
     var player = new PlayerModel(name, 1).toMap();
     playerList.add(player);
     savePlayerList(playerList);
     notifyListeners();
   }
 
-  deletePlayer(name) {
-    // TODO: Delete a player from the list
+  deletePlayer(playerName) {
+    // Find the index of our player based on the name
+    int playerIndex;
+    playerIndex =
+        playerList.indexWhere((player) => player['name'] == playerName);
+    playerList.removeAt(playerIndex);
+    savePlayerList(playerList);
+    if (playerList.length == 0) {
+      editing = false;
+    }
+    notifyListeners();
+  }
+
+  newGame() {
+    for (var i = 0; i < playerList.length; i++) {
+      playerList[i]['score'] = 1;
+    }
+    savePlayerList(playerList);
+    notifyListeners();
+  }
+
+  changeScore(playerName, upOrDown) {
+    // get the index of the object that contains our player
+    var playerIndex =
+        playerList.indexWhere((player) => player["name"] == playerName);
+    if (upOrDown == "up") {
+      playerList[playerIndex]["score"] += 1;
+    } else {
+      playerList[playerIndex]["score"] -= 1;
+    }
+    savePlayerList(playerList);
+    notifyListeners();
+  }
+
+  handleEditButton(isEditing) {
+    isEditing ? editing = false : editing = true;
+    notifyListeners();
   }
 }
