@@ -37,7 +37,7 @@ class _HomeProviderState extends State<HomeProvider> {
   bool _loading = true;
   String _queryProductError;
   bool _purchased = false;
-  String _connectionStatus = 'Unknown';
+  bool _connectionStatus = false;
 
   final Connectivity _connectivity = Connectivity();
   StreamSubscription<ConnectivityResult> _connectivitySubscription;
@@ -84,9 +84,16 @@ class _HomeProviderState extends State<HomeProvider> {
   }
 
   Future<void> _updateConnectionStatus(ConnectivityResult result) async {
-    setState(() {
-      _connectionStatus = result.toString();
-    });
+    print(result);
+    if (result != ConnectivityResult.none) {
+      setState(() {
+        _connectionStatus = true;
+      });
+    } else {
+      setState(() {
+        _connectionStatus = false;
+      });
+    }
     print("Connection status: $_connectionStatus");
   }
 
@@ -188,7 +195,7 @@ class _HomeProviderState extends State<HomeProvider> {
                             })
                       },
                     ),
-                    (!_purchased)
+                    (!_purchased && _connectionStatus)
                         ? FlatButton(
                             child: Text("Remove Ads",
                                 style: TextStyle(color: Colors.white)),
@@ -350,17 +357,6 @@ class _HomeProviderState extends State<HomeProvider> {
                   fit: BoxFit.cover),
             ),
             child: Center(child: CircularProgressIndicator()));
-  }
-
-  Future<bool> checkConnection() async {
-    var connectivityResult = await (Connectivity().checkConnectivity());
-
-    if (connectivityResult == ConnectionResult.none) {
-      _connectedToNetwork = false;
-    } else
-      _connectedToNetwork = true;
-
-    return _connectedToNetwork;
   }
 
   Future<void> initStoreInfo() async {
